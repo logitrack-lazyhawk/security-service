@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: security-service
+  profiles:
+    active: dev
+  config:
+    import: "optional:configserver:http://localhost:8085"
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/security_db?createDatabaseIfNotExist=true
+    username: root
+    password: ${SECURITY_DB_PASSWORD:admin123}
