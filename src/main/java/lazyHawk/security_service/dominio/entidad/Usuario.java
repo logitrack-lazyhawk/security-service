@@ -26,7 +26,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usuario {
+public class Usuario extends EntidadAuditable{
+
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
