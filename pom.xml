@@ -6,19 +6,18 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.4</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>4.2.0-SNAPSHOT</version> <!-- VOLVEMOS A LA VERSIÓN QUE SOPORTA JAVA 25 -->
+		<relativePath/>
 	</parent>
 
 	<groupId>lazyHawk</groupId>
 	<artifactId>security-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>security-service</name>
-	<description>Microservicio de Seguridad</description>
 
 	<properties>
 		<java.version>25</java.version>
-		<spring-cloud.version>2023.0.3</spring-cloud.version>
+		<spring-cloud.version>2025.1.1</spring-cloud.version> <!-- VERSIÓN COMPATIBLE -->
 	</properties>
 
 	<dependencyManagement>
@@ -74,7 +73,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- DEPENDENCIAS DE TEST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -107,4 +105,26 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- RESTAURAMOS LOS REPOSITORIOS PARA QUE ENCUENTRE LA VERSIÓN SNAPSHOT -->
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
