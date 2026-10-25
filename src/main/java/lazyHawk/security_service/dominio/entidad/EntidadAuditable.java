@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -15,6 +17,9 @@ import java.time.LocalDateTime;
  * @author leoM2022
  * @version 1.0.0
  */
+
+@Getter
+@Setter
 public abstract class EntidadAuditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
