@@ -11,6 +11,7 @@ import java.util.Optional;
  * @author leoM2022
  * @version 1.0.0
  */
+
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, String> {
 
