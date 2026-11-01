@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import io.jsonwebtoken.JwtException;
+import org.springframework.security.core.AuthenticationException;
 
 @Component
 @RequiredArgsConstructor
@@ -40,19 +42,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
-
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+        jwt = authHeader.substring(7).trim();
+        if (jwt.isEmpty()) {
+            SecurityErrorResponse.escribir(request, response, "auth.token.missing");
+            return;
+        }
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+            if (userEmail == null || userEmail.isBlank()) {
+                SecurityErrorResponse.escribir(request, response, "auth.token.invalid");
+                return;
+            }
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                if (!jwtService.isTokenValid(jwt, userDetails) || !userDetails.isEnabled()
+                        || !userDetails.isAccountNonLocked() || !userDetails.isAccountNonExpired()
+                        || !userDetails.isCredentialsNonExpired()) {
+                    SecurityErrorResponse.escribir(request, response, "auth.token.invalid");
+                    return;
+                }
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
+                        userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+        } catch (JwtException | IllegalArgumentException | AuthenticationException ex) {
+            SecurityContextHolder.clearContext();
+            SecurityErrorResponse.escribir(request, response, "auth.token.invalid");
+            return;
         }
         filterChain.doFilter(request, response);
     }

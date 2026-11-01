@@ -1,9 +1,12 @@
 package lazyHawk.security_service.controlador;
 
-import lazyHawk.security_service.dto.AuthResponseDTO;
-import lazyHawk.security_service.dto.LoginRequestDTO;
-import lazyHawk.security_service.dto.RegistroRequestDTO;
-import lazyHawk.security_service.dto.UsuarioPerfilDTO;
+import lazyHawk.security_service.dto.AuthResponseDto;
+import lazyHawk.security_service.dto.PerfilResponseDto;
+import lazyHawk.security_service.mensaje.Mensajes;
+import lazyHawk.security_service.dto.RegistroResponseDto;
+import lazyHawk.security_service.dto.LoginRequestDto;
+import lazyHawk.security_service.dto.RegistroRequestDto;
+import lazyHawk.security_service.dto.UsuarioPerfilDto;
 import lazyHawk.security_service.servicio.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +39,8 @@ public class AuthController {
      * @return ResponseEntity con código HTTP 201 (Created) si el registro fue exitoso.
      */
     @PostMapping("/registro")
-    public ResponseEntity<Void> registrar(@Valid @RequestBody RegistroRequestDTO request) {
-        authService.registrar(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<RegistroResponseDto> registrar(@Valid @RequestBody RegistroRequestDto request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registrar(request));
     }
 
     /**
@@ -48,8 +50,8 @@ public class AuthController {
      * @return ResponseEntity con código HTTP 200 (OK) y el token JWT en el cuerpo de la respuesta.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
-        AuthResponseDTO response = authService.login(request);
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
+        AuthResponseDto response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 
@@ -60,8 +62,8 @@ public class AuthController {
      * @return ResponseEntity con código HTTP 200 (OK) y el perfil del usuario.
      */
     @GetMapping("/me")
-    public ResponseEntity<UsuarioPerfilDTO> obtenerPerfil(Authentication authentication) {
-        UsuarioPerfilDTO perfil = authService.obtenerPerfil(authentication.getName());
-        return ResponseEntity.ok(perfil);
+    public ResponseEntity<PerfilResponseDto> obtenerPerfil(Authentication authentication) {
+        UsuarioPerfilDto perfil = authService.obtenerPerfil(authentication.getName());
+        return ResponseEntity.ok(new PerfilResponseDto(Mensajes.obtener("auth.token.success"), perfil));
     }
 }
