@@ -36,6 +36,11 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, exception) ->
+                        SecurityErrorResponse.escribir(request, response,
+                                request.getHeader("Authorization") == null
+                                        || request.getHeader("Authorization").isBlank()
+                                        ? "auth.token.missing" : "auth.token.invalid")))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
                         .anyRequest().authenticated()

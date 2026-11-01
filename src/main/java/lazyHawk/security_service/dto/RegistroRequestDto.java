@@ -10,14 +10,14 @@ import jakarta.validation.constraints.NotNull;
  * @author leoM2022
  * @version 1.0.0
  */
-public record RegistroRequestDTO(
-        @NotBlank(message = "El email es obligatorio")
-        @Email(message = "El formato del email es inválido")
+public record RegistroRequestDto(
+        @NotBlank(message = "{validation.email.required}")
+        @Email(message = "{validation.email.invalid}")
         String email,
 
-        @NotBlank(message = "La contraseña es obligatoria")
+        @NotBlank(message = "{validation.password.required}")
         String password,
 
-        @NotNull(message = "El rol es obligatorio")
+        @NotNull(message = "{validation.role.required}")
         RolUsuario rol
 ) {}

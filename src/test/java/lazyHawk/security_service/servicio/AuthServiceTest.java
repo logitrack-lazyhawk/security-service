@@ -2,9 +2,9 @@ package lazyHawk.security_service.servicio;
 
 import lazyHawk.security_service.dominio.entidad.Usuario;
 import lazyHawk.security_service.dominio.enumerador.RolUsuario;
-import lazyHawk.security_service.dto.AuthResponseDTO;
-import lazyHawk.security_service.dto.LoginRequestDTO;
-import lazyHawk.security_service.dto.RegistroRequestDTO;
+import lazyHawk.security_service.dto.AuthResponseDto;
+import lazyHawk.security_service.dto.LoginRequestDto;
+import lazyHawk.security_service.dto.RegistroRequestDto;
 import lazyHawk.security_service.repositorio.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,8 +53,8 @@ class AuthServiceTest {
     private AuthService authService;
 
     private Usuario usuarioPrueba;
-    private RegistroRequestDTO registroDTO;
-    private LoginRequestDTO loginDTO;
+    private RegistroRequestDto registroDTO;
+    private LoginRequestDto loginDTO;
 
     @BeforeEach
     void setUp() {
@@ -66,8 +66,8 @@ class AuthServiceTest {
                 .build();
         usuarioPrueba.setId("uuid-test-123");
 
-        registroDTO = new RegistroRequestDTO("test@logitrack.com", "password123", RolUsuario.CLIENTE);
-        loginDTO = new LoginRequestDTO("test@logitrack.com", "password123");
+        registroDTO = new RegistroRequestDto("test@logitrack.com", "password123", RolUsuario.CLIENTE);
+        loginDTO = new LoginRequestDto("test@logitrack.com", "password123");
     }
 
     @Test
@@ -76,7 +76,15 @@ class AuthServiceTest {
         when(usuarioRepository.existsByEmail(registroDTO.email())).thenReturn(false);
         when(passwordEncoder.encode(registroDTO.password())).thenReturn("encoded_password");
 
-        authService.registrar(registroDTO);
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuarioPrueba);
+
+        var respuesta = authService.registrar(registroDTO);
+
+        assertNotNull(respuesta.message());
+        assertEquals(usuarioPrueba.getId(), respuesta.usuario().id());
+        assertEquals(usuarioPrueba.getEmail(), respuesta.usuario().email());
+        assertEquals(usuarioPrueba.getRol(), respuesta.usuario().rol());
+        assertEquals(usuarioPrueba.isActivo(), respuesta.usuario().activo());
 
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }
@@ -96,7 +104,7 @@ class AuthServiceTest {
         when(usuarioRepository.findByEmail(loginDTO.email())).thenReturn(Optional.of(usuarioPrueba));
         when(jwtService.generateToken(usuarioPrueba)).thenReturn("jwt-token-generado");
 
-        AuthResponseDTO respuesta = authService.login(loginDTO);
+        AuthResponseDto respuesta = authService.login(loginDTO);
 
         assertNotNull(respuesta);
         assertEquals("jwt-token-generado", respuesta.token());

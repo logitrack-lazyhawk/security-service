@@ -1,10 +1,12 @@
 package lazyHawk.security_service.servicio;
 
 import lazyHawk.security_service.dominio.entidad.Usuario;
-import lazyHawk.security_service.dto.AuthResponseDTO;
-import lazyHawk.security_service.dto.LoginRequestDTO;
-import lazyHawk.security_service.dto.RegistroRequestDTO;
-import lazyHawk.security_service.dto.UsuarioPerfilDTO;
+import lazyHawk.security_service.dto.AuthResponseDto;
+import lazyHawk.security_service.dto.RegistroResponseDto;
+import lazyHawk.security_service.mensaje.Mensajes;
+import lazyHawk.security_service.dto.LoginRequestDto;
+import lazyHawk.security_service.dto.RegistroRequestDto;
+import lazyHawk.security_service.dto.UsuarioPerfilDto;
 import lazyHawk.security_service.repositorio.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,9 +37,9 @@ public class AuthService {
      * @throws IllegalArgumentException si el correo electrónico ya se encuentra registrado.
      */
     @Transactional
-    public void registrar(RegistroRequestDTO request) {
+    public RegistroResponseDto registrar(RegistroRequestDto request) {
         if (usuarioRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("El email ya se encuentra registrado en el sistema.");
+            throw new IllegalArgumentException(Mensajes.obtener("auth.email.duplicate"));
         }
 
         Usuario nuevoUsuario = Usuario.builder()
@@ -47,40 +49,42 @@ public class AuthService {
                 .activo(true)
                 .build();
 
-        usuarioRepository.save(nuevoUsuario);
+        Usuario usuario = usuarioRepository.save(nuevoUsuario);
+        return new RegistroResponseDto(Mensajes.obtener("auth.registration.success"),
+                new UsuarioPerfilDto(usuario.getId(), usuario.getEmail(), usuario.getRol(), usuario.isActivo()));
     }
 
     /**
      * Autentica las credenciales de un usuario y genera su token JWT de acceso.
      *
      * @param request DTO con las credenciales de inicio de sesión.
-     * @return AuthResponseDTO que contiene el token JWT generado y los datos básicos.
+     * @return AuthResponseDto que contiene el token JWT generado y los datos básicos.
      */
     @Transactional(readOnly = true)
-    public AuthResponseDTO login(LoginRequestDTO request) {
+    public AuthResponseDto login(LoginRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
 
         Usuario usuario = usuarioRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado en los registros."));
+                .orElseThrow(() -> new IllegalArgumentException(Mensajes.obtener("auth.user.not-found")));
 
         String token = jwtService.generateToken(usuario);
 
-        return new AuthResponseDTO(token, usuario.getEmail(), usuario.getRol());
+        return new AuthResponseDto(token, usuario.getEmail(), usuario.getRol());
     }
 
     /**
      * Obtiene el perfil público del usuario que se encuentra actualmente autenticado en el contexto.
      *
      * @param email Correo electrónico extraído del token JWT.
-     * @return UsuarioPerfilDTO con los datos de solo lectura del usuario.
+     * @return UsuarioPerfilDto con los datos de solo lectura del usuario.
      */
     @Transactional(readOnly = true)
-    public UsuarioPerfilDTO obtenerPerfil(String email) {
+    public UsuarioPerfilDto obtenerPerfil(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado en los registros."));
+                .orElseThrow(() -> new IllegalArgumentException(Mensajes.obtener("auth.user.not-found")));
 
-        return new UsuarioPerfilDTO(usuario.getId(), usuario.getEmail(), usuario.getRol(), usuario.isActivo());
+        return new UsuarioPerfilDto(usuario.getId(), usuario.getEmail(), usuario.getRol(), usuario.isActivo());
     }
 }
