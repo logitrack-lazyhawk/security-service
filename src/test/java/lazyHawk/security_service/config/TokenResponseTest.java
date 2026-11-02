@@ -31,6 +31,13 @@ class TokenResponseTest {
     }
 
     @Test
+    void healthSePuedeConsultarSinToken() throws Exception {
+        mvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
     void sinTokenDevuelveMensaje() throws Exception {
         mvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized())

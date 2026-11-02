@@ -42,7 +42,7 @@ public class SecurityConfig {
                                         || request.getHeader("Authorization").isBlank()
                                         ? "auth.token.missing" : "auth.token.invalid")))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/registro", "/api/auth/login", "/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
