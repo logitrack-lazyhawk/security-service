@@ -2,6 +2,7 @@ package lazyHawk.security_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 /**
  * Clase principal de la aplicación Spring Boot.
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  */
 @SpringBootApplication
 @EnableJpaAuditing
+@EnableDiscoveryClient
 public class SecurityServiceApplication {
 
 	public static void main(String[] args) {
