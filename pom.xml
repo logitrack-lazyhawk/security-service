@@ -122,6 +122,18 @@
 		</dependency>
 	</dependencies>
 
+	<!-- Micrometer Tracing con puente Brave (Reemplazo oficial de Sleuth en Spring Boot 3+) -->
+	<dependency>
+		<groupId>io.micrometer</groupId>
+		<artifactId>micrometer-tracing-bridge-brave</artifactId>
+	</dependency>
+
+	<!-- Exportador de trazas a Zipkin Server -->
+	<dependency>
+		<groupId>io.zipkin.reporter2</groupId>
+		<artifactId>zipkin-reporter-brave</artifactId>
+	</dependency>
+
 	<build>
 		<plugins>
 			<plugin>
