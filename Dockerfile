@@ -16,6 +16,7 @@ RUN mvn clean package -DskipTests
 # Etapa 2: Runner (Ejecución ligera con JRE 25)
 # ==============================================================================
 FROM eclipse-temurin:25-jre-noble AS runner
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Crear usuario y grupo no privilegiado por seguridad

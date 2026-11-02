@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.2.0-SNAPSHOT</version>
+		<version>4.1.2</version>
 		<relativePath/>
 	</parent>
 
@@ -17,7 +17,7 @@
 
 	<properties>
 		<java.version>25</java.version>
-		<spring-cloud.version>2025.1.1</spring-cloud.version>
+		<spring-cloud.version>2025.1.4</spring-cloud.version>
 		<argLine/>
 	</properties>
 
@@ -121,17 +121,17 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Micrometer Tracing con puente Brave (Reemplazo oficial de Sleuth en Spring Boot 3+) -->
 		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-zipkin</artifactId>
 		</dependency>
 
-		<!-- Exportador de trazas a Zipkin Server -->
-		<dependency>git
-			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter-brave</artifactId>
+		<!-- Registro y descubrimiento de servicios -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -177,25 +177,4 @@
 		</plugins>
 	</build>
 
-	<repositories>
-		<repository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-snapshots</id>
-			<name>Spring Snapshots</name>
-			<url>https://repo.spring.io/snapshot</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</pluginRepository>
-	</pluginRepositories>
 </project>
