@@ -1,13 +1,16 @@
 package lazyHawk.security_service.config;
 
-import lazyHawk.security_service.servicio.JwtService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lazyHawk.security_service.servicio.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,8 +19,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import io.jsonwebtoken.JwtException;
-import org.springframework.security.core.AuthenticationException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -33,22 +36,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
+        final String xAuthUser = request.getHeader("X-Auth-User");
+        final String xAuthRoles = request.getHeader("X-Auth-Roles");
 
+        // 1. Si la petición ya fue autenticada e inyectada por el API Gateway
+        if (xAuthUser != null && !xAuthUser.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+            if (xAuthRoles != null && !xAuthRoles.isBlank()) {
+                for (String role : xAuthRoles.split(",")) {
+                    String trimmed = role.trim();
+                    if (!trimmed.isEmpty()) {
+                        String authRole = trimmed.startsWith("ROLE_") ? trimmed : "ROLE_" + trimmed;
+                        authorities.add(new SimpleGrantedAuthority(authRole));
+                    }
+                }
+            }
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    xAuthUser, null, authorities);
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 2. Si viene con cabecera Authorization directa (Bearer token)
+        final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7).trim();
+        final String jwt = authHeader.substring(7).trim();
         if (jwt.isEmpty()) {
             SecurityErrorResponse.escribir(request, response, "auth.token.missing");
             return;
         }
         try {
-            userEmail = jwtService.extractUsername(jwt);
+            String userEmail = jwtService.extractUsername(jwt);
             if (userEmail == null || userEmail.isBlank()) {
                 SecurityErrorResponse.escribir(request, response, "auth.token.invalid");
                 return;

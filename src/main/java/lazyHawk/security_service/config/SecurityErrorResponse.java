@@ -23,4 +23,13 @@ final class SecurityErrorResponse {
                 LocalDateTime.now(), 401, "Unauthorized", Mensajes.obtener(clave),
                 request.getRequestURI(), Map.of())));
     }
+
+    static void escribirForbidden(HttpServletRequest request, HttpServletResponse response, String clave) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(JSON.writeValueAsString(new ErrorResponseDto(
+                LocalDateTime.now(), 403, "Forbidden", Mensajes.obtener(clave),
+                request.getRequestURI(), Map.of())));
+    }
 }

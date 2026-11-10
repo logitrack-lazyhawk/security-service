@@ -9,12 +9,15 @@ import lazyHawk.security_service.servicio.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -45,6 +48,22 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.usuario.id").value("usuario-id"))
                 .andExpect(jsonPath("$.usuario.email").value("test@example.com"))
                 .andExpect(jsonPath("$.usuario.password").doesNotExist());
+    }
+
+    @Test
+    void registroConRolVendedorRetorna201Created() throws Exception {
+        when(authService.registrar(any())).thenReturn(new RegistroResponseDto(
+                Mensajes.obtener("auth.registration.success"),
+                new UsuarioPerfilDto("vendedor-id", "vendedor@example.com", RolUsuario.VENDEDOR, true)));
+
+        mvc.perform(post("/api/auth/registro").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"vendedor@example.com","password":"password123","rol":"VENDEDOR"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value(Mensajes.obtener("auth.registration.success")))
+                .andExpect(jsonPath("$.usuario.id").value("vendedor-id"))
+                .andExpect(jsonPath("$.usuario.rol").value("VENDEDOR"));
     }
 
     @Test
@@ -84,5 +103,44 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value(Mensajes.obtener("error.request.invalid")))
                 .andExpect(jsonPath("$.path").value("/api/auth/registro"));
         verifyNoInteractions(authService);
+    }
+
+    @Test
+    void obtenerUsuarioPorId_AdminRetorna200Ok() throws Exception {
+        when(authService.obtenerPerfilPorId(eq("user-123"), any(), eq("admin@logitrack.com"), eq("ROLE_ADMIN")))
+                .thenReturn(new UsuarioPerfilDto("user-123", "cliente@logitrack.com", RolUsuario.CLIENTE, true));
+
+        mvc.perform(get("/api/auth/usuarios/user-123")
+                        .header("X-Auth-User", "admin@logitrack.com")
+                        .header("X-Auth-Roles", "ROLE_ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usuario.id").value("user-123"))
+                .andExpect(jsonPath("$.usuario.email").value("cliente@logitrack.com"));
+    }
+
+    @Test
+    void obtenerUsuarioPorId_ClientePropioRetorna200Ok() throws Exception {
+        when(authService.obtenerPerfilPorId(eq("user-123"), any(), eq("user-123"), eq("ROLE_CLIENTE")))
+                .thenReturn(new UsuarioPerfilDto("user-123", "cliente@logitrack.com", RolUsuario.CLIENTE, true));
+
+        mvc.perform(get("/api/auth/usuarios/user-123")
+                        .header("X-Auth-User", "user-123")
+                        .header("X-Auth-Roles", "ROLE_CLIENTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.usuario.id").value("user-123"));
+    }
+
+    @Test
+    void obtenerUsuarioPorId_ClienteAjenoRetorna403Forbidden() throws Exception {
+        when(authService.obtenerPerfilPorId(eq("user-otro"), any(), eq("user-123"), eq("ROLE_CLIENTE")))
+                .thenThrow(new AccessDeniedException("Acceso denegado: No posee pertenencia sobre este recurso"));
+
+        mvc.perform(get("/api/auth/usuarios/user-otro")
+                        .header("X-Auth-User", "user-123")
+                        .header("X-Auth-Roles", "ROLE_CLIENTE"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.message").value("Acceso denegado: No posee pertenencia sobre este recurso"));
     }
 }
